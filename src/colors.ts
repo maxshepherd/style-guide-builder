@@ -513,3 +513,126 @@ export function generatePaletteFromBase(baseColor: OKLCHColor): {
     error,
   };
 }
+
+/**
+ * Algorithm 1: Classical Harmony Schemes
+ * Generate color combinations based on fixed angular relationships on the color wheel
+ */
+export interface HarmonyScheme {
+  name: string;
+  colors: OKLCHColor[];
+  description: string;
+}
+
+export function generateClassicalHarmony(baseColor: OKLCHColor): HarmonyScheme[] {
+  return [
+    {
+      name: 'Complementary',
+      description: 'Two colors opposite each other (180° apart)',
+      colors: [baseColor, { ...baseColor, h: (baseColor.h + 180) % 360 }],
+    },
+    {
+      name: 'Analogous',
+      description: 'Colors adjacent to each other (30° and 330°)',
+      colors: [
+        { ...baseColor, h: (baseColor.h - 30 + 360) % 360 },
+        baseColor,
+        { ...baseColor, h: (baseColor.h + 30) % 360 },
+      ],
+    },
+    {
+      name: 'Triadic',
+      description: 'Three colors equally spaced (120° apart)',
+      colors: [
+        baseColor,
+        { ...baseColor, h: (baseColor.h + 120) % 360 },
+        { ...baseColor, h: (baseColor.h + 240) % 360 },
+      ],
+    },
+    {
+      name: 'Tetradic',
+      description: 'Four colors in two complementary pairs',
+      colors: [
+        baseColor,
+        { ...baseColor, h: (baseColor.h + 60) % 360 },
+        { ...baseColor, h: (baseColor.h + 180) % 360 },
+        { ...baseColor, h: (baseColor.h + 240) % 360 },
+      ],
+    },
+  ];
+}
+
+/**
+ * Algorithm 2: Perceptual Weighting in OKLCH
+ * Generate colors with constant lightness and chroma, varying only hue
+ * This ensures all colors have equal visual weight
+ */
+export function generatePerceptuallyBalanced(baseColor: OKLCHColor, count: number = 6): OKLCHColor[] {
+  const colors: OKLCHColor[] = [];
+  const { l, c } = baseColor;
+
+  // Distribute colors evenly around the color wheel
+  const step = 360 / count;
+
+  for (let i = 0; i < count; i++) {
+    colors.push({
+      l, // Constant lightness
+      c, // Constant chroma
+      h: (baseColor.h + i * step) % 360,
+      alpha: baseColor.alpha,
+    });
+  }
+
+  return colors;
+}
+
+/**
+ * Algorithm 3: Functional Scale Generation
+ * Generate an extensive scale of shades and tints using mathematical functions
+ */
+export interface FunctionalScale {
+  name: string;
+  colors: OKLCHColor[];
+}
+
+export function generateFunctionalScale(baseColor: OKLCHColor, steps: number = 11): FunctionalScale {
+  const colors: OKLCHColor[] = [];
+
+  for (let i = 0; i < steps; i++) {
+    // Normalize to 0-1 range
+    const n = i / (steps - 1);
+
+    // Lightness function: L(n) = 1 - n (linear from light to dark)
+    const lightness = 1 - n * 0.85; // Don't go completely black
+
+    // Chroma function: upside-down parabola, peaks at midpoint
+    // C(n) = 4 * baseChroma * n * (1 - n)
+    // This makes colors more saturated in the middle, less at extremes
+    const chromaMultiplier = 4 * n * (1 - n);
+    const chroma = baseColor.c * Math.max(0.2, chromaMultiplier);
+
+    // Hue shifting (Bezold-Brücke effect)
+    // Adjust hue slightly as lightness decreases
+    // Warmer hues shift towards red in shadows, cooler towards blue
+    let hueShift = 0;
+    if (baseColor.h >= 30 && baseColor.h <= 90) {
+      // Warm colors: shift towards red in shadows
+      hueShift = -(1 - n) * 10;
+    } else if (baseColor.h >= 180 && baseColor.h <= 270) {
+      // Cool colors: shift towards blue in shadows
+      hueShift = (1 - n) * 10;
+    }
+
+    colors.push({
+      l: Math.max(0.05, Math.min(0.98, lightness)),
+      c: Math.max(0, Math.min(0.5, chroma)),
+      h: (baseColor.h + hueShift + 360) % 360,
+      alpha: baseColor.alpha,
+    });
+  }
+
+  return {
+    name: 'Functional Scale',
+    colors,
+  };
+}

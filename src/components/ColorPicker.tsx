@@ -23,26 +23,30 @@ export function ColorPicker({ baseColor }: ColorPickerProps) {
       </p>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-        {/* Color Wheel Input */}
+        {/* OKLCH Color Wheel Visualization */}
         <div>
-          <label style="display: block; font-weight: 500; margin-bottom: 12px; color: #333;">Base Color</label>
-          <div style="display: flex; align-items: center; gap: 16px;">
+          <label style="display: block; font-weight: 500; margin-bottom: 12px; color: #333;">OKLCH Color Wheel</label>
+          <div style="position: relative; width: 240px; height: 240px; margin: 0 auto;">
+            <canvas
+              id="oklch-wheel"
+              width="240"
+              height="240"
+              style="border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"
+            ></canvas>
+            <div
+              id="color-indicator"
+              style="position: absolute; width: 20px; height: 20px; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3); pointer-events: none; transition: all 0.1s ease;"
+            ></div>
+          </div>
+          <div style="text-align: center; margin-top: 12px;">
+            <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Hex</div>
             <input
-              type="color"
-              id="color-picker"
+              type="text"
+              id="color-hex"
               value={hexValue}
-              style="width: 80px; height: 80px; border: 3px solid #e0e0e0; border-radius: 8px; cursor: pointer;"
+              style="width: 120px; padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-family: monospace; font-size: 14px; text-align: center;"
+              placeholder="#000000"
             />
-            <div>
-              <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Hex</div>
-              <input
-                type="text"
-                id="color-hex"
-                value={hexValue}
-                style="width: 120px; padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-family: monospace; font-size: 14px;"
-                placeholder="#000000"
-              />
-            </div>
           </div>
         </div>
 
@@ -73,15 +77,16 @@ export function ColorPicker({ baseColor }: ColorPickerProps) {
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
               <span style="font-size: 12px; color: #666;">Chroma (Saturation)</span>
               <span id="chroma-value" style="font-size: 12px; font-weight: 600; color: #333;">
-                {Math.round(baseColor.c * 100)}%
+                {baseColor.c.toFixed(3)}
               </span>
             </div>
             <input
               type="range"
               id="chroma-slider"
               min="0"
-              max="40"
-              value={Math.round(baseColor.c * 100)}
+              max="0.5"
+              step="0.001"
+              value={baseColor.c}
               style="width: 100%; height: 6px; border-radius: 3px;"
             />
           </div>
@@ -119,12 +124,10 @@ export function ColorPicker({ baseColor }: ColorPickerProps) {
         <span id="generation-status" style="margin-left: 16px; color: #666; font-size: 14px;"></span>
       </div>
 
-      {/* Interactive Script */}
       <script
         dangerouslySetInnerHTML={{
           __html: `
         (function() {
-          const colorPicker = document.getElementById('color-picker');
           const colorHex = document.getElementById('color-hex');
           const lightnessSlider = document.getElementById('lightness-slider');
           const chromaSlider = document.getElementById('chroma-slider');
@@ -134,8 +137,100 @@ export function ColorPicker({ baseColor }: ColorPickerProps) {
           const hueValue = document.getElementById('hue-value');
           const generateBtn = document.getElementById('generate-palette-btn');
           const status = document.getElementById('generation-status');
+          const canvas = document.getElementById('oklch-wheel');
+          const ctx = canvas.getContext('2d');
+          const colorIndicator = document.getElementById('color-indicator');
 
           let currentOKLCH = ${JSON.stringify(baseColor)};
+
+          // Draw OKLCH Color Wheel
+          function drawColorWheel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = canvas.width / 2 - 20;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw the color wheel with current lightness and chroma
+            for (let angle = 0; angle < 360; angle += 0.5) {
+              const startAngle = (angle - 0.25) * Math.PI / 180;
+              const endAngle = (angle + 0.25) * Math.PI / 180;
+              
+              // Create gradient from center to edge for chroma
+              const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+              
+              // Center is gray (low chroma)
+              const centerColor = oklchToRgbString({ l: currentOKLCH.l, c: 0, h: angle });
+              const edgeColor = oklchToRgbString({ l: currentOKLCH.l, c: currentOKLCH.c, h: angle });
+              
+              gradient.addColorStop(0, centerColor);
+              gradient.addColorStop(1, edgeColor);
+              
+              ctx.beginPath();
+              ctx.moveTo(centerX, centerY);
+              ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+              ctx.closePath();
+              ctx.fillStyle = gradient;
+              ctx.fill();
+            }
+            
+            // Update color indicator position
+            updateColorIndicator();
+          }
+          
+          // Update color indicator position on wheel
+          function updateColorIndicator() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = (canvas.width / 2 - 20) * (currentOKLCH.c / 0.5); // Scale by max chroma
+            
+            // Convert hue to canvas angle (hue 0° = right, canvas uses standard math angles)
+            const angle = currentOKLCH.h * Math.PI / 180;
+            const x = centerX + radius * Math.cos(angle) - 10; // -10 for half indicator width
+            const y = centerY + radius * Math.sin(angle) - 10;
+            
+            colorIndicator.style.left = x + 'px';
+            colorIndicator.style.top = y + 'px';
+            colorIndicator.style.background = oklchToHex(currentOKLCH);
+          }
+          
+          // Convert OKLCH to RGB string for canvas
+          function oklchToRgbString(oklch) {
+            const l = oklch.l;
+            const c = oklch.c;
+            const h = oklch.h;
+            
+            const hRad = (h * Math.PI) / 180;
+            const a = c * Math.cos(hRad);
+            const b = c * Math.sin(hRad);
+
+            const l_ = l + 0.3963377774 * a + 0.2158037573 * b;
+            const m_ = l - 0.1055613458 * a - 0.0638541728 * b;
+            const s_ = l - 0.0894841775 * a - 1.291485548 * b;
+
+            const l3 = l_ * l_ * l_;
+            const m3 = m_ * m_ * m_;
+            const s3 = s_ * s_ * s_;
+
+            let r = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699292 * s3;
+            let g = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
+            let b_ = -0.0041960863 * l3 - 0.7034186147 * m3 + 1.707614701 * s3;
+
+            function gammaCorrection(value) {
+              if (value <= 0.0031308) return 12.92 * value;
+              return 1.055 * Math.pow(value, 1 / 2.4) - 0.055;
+            }
+
+            r = gammaCorrection(r);
+            g = gammaCorrection(g);
+            b_ = gammaCorrection(b_);
+
+            const rInt = Math.max(0, Math.min(255, Math.round(r * 255)));
+            const gInt = Math.max(0, Math.min(255, Math.round(g * 255)));
+            const bInt = Math.max(0, Math.min(255, Math.round(b_ * 255)));
+
+            return 'rgb(' + rInt + ',' + gInt + ',' + bInt + ')';
+          }
 
           // Helper: Hex to RGB
           function hexToRgb(hex) {
@@ -210,29 +305,13 @@ export function ColorPicker({ baseColor }: ColorPickerProps) {
           function updateDisplays() {
             const hex = oklchToHex(currentOKLCH);
             colorHex.value = hex;
-            colorPicker.value = hex;
             lightnessValue.textContent = Math.round(currentOKLCH.l * 100) + '%';
-            chromaValue.textContent = Math.round(currentOKLCH.c * 100) + '%';
+            chromaValue.textContent = currentOKLCH.c.toFixed(3);
             hueValue.textContent = Math.round(currentOKLCH.h) + '°';
+            drawColorWheel(); // Redraw wheel with new values
           }
 
           // Color picker change
-          colorPicker.addEventListener('input', async (e) => {
-            const hex = e.target.value;
-            const rgb = hexToRgb(hex);
-            if (rgb) {
-              const oklch = await rgbToOklch(rgb);
-              if (oklch) {
-                currentOKLCH = oklch;
-                lightnessSlider.value = Math.round(oklch.l * 100);
-                chromaSlider.value = Math.round(oklch.c * 100);
-                hueSlider.value = Math.round(oklch.h);
-                updateDisplays();
-              }
-            }
-          });
-
-          // Hex input change
           colorHex.addEventListener('change', async (e) => {
             const hex = e.target.value;
             if (/^#[0-9A-F]{6}$/i.test(hex)) {
@@ -242,7 +321,7 @@ export function ColorPicker({ baseColor }: ColorPickerProps) {
                 if (oklch) {
                   currentOKLCH = oklch;
                   lightnessSlider.value = Math.round(oklch.l * 100);
-                  chromaSlider.value = Math.round(oklch.c * 100);
+                  chromaSlider.value = oklch.c;
                   hueSlider.value = Math.round(oklch.h);
                   updateDisplays();
                 }
@@ -257,7 +336,7 @@ export function ColorPicker({ baseColor }: ColorPickerProps) {
           });
 
           chromaSlider.addEventListener('input', (e) => {
-            currentOKLCH.c = e.target.value / 100;
+            currentOKLCH.c = parseFloat(e.target.value);
             updateDisplays();
           });
 
@@ -265,6 +344,42 @@ export function ColorPicker({ baseColor }: ColorPickerProps) {
             currentOKLCH.h = parseFloat(e.target.value);
             updateDisplays();
           });
+          
+          // Add click interaction on the color wheel
+          canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            const dx = x - centerX;
+            const dy = y - centerY;
+            
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const maxRadius = canvas.width / 2 - 20;
+            
+            if (distance <= maxRadius) {
+              // Calculate hue from angle (atan2 gives us standard math angles)
+              let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+              if (angle < 0) angle += 360;
+              
+              // Calculate chroma from distance
+              const chroma = Math.min(0.5, (distance / maxRadius) * 0.5);
+              
+              currentOKLCH.h = angle;
+              currentOKLCH.c = chroma;
+              
+              hueSlider.value = Math.round(angle);
+              chromaSlider.value = chroma;
+              
+              updateDisplays();
+            }
+          });
+
+          // Initial draw
+          drawColorWheel();
 
           // Generate palette
           generateBtn.addEventListener('click', async () => {

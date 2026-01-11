@@ -1,6 +1,7 @@
 import type { StyleGuideConfig } from '../types';
 import { Layout } from './Layout';
 import { ColorsSection } from './ColorsSection';
+import { ColorCombinationsSection } from './ColorCombinationsSection';
 import { TypographySection } from './TypographySection';
 import { SpacingSection } from './SpacingSection';
 import { AccessibilitySection } from './AccessibilitySection';
@@ -18,6 +19,7 @@ export function StyleGuidePage({ config }: { config: StyleGuideConfig }) {
     <Layout config={config}>
       <ColorPicker baseColor={baseColor} />
       <ColorsSection config={config} />
+      <ColorCombinationsSection baseColor={baseColor} />
       <TypographySection config={config} />
       <SpacingSection config={config} />
       <AccessibilitySection config={config} />

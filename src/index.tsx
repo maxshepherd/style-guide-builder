@@ -3,10 +3,10 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
+import { serveStatic } from 'hono/bun';
 import type { StyleGuideConfig } from './types';
 import { defaultConfig, loadConfig, validateConfig, exportConfig, importConfig } from './config';
 import { StyleGuidePage } from './components/StyleGuidePage';
-import { generateCSS } from './styles';
 import {
   oklchToRgb,
   oklchToHex,
@@ -36,14 +36,9 @@ app.get('/', (c) => {
 });
 
 /**
- * Serve dynamic CSS based on configuration
+ * Serve static CSS file
  */
-app.get('/styles.css', (c) => {
-  const css = generateCSS(currentConfig);
-  return c.text(css, 200, {
-    'Content-Type': 'text/css',
-  });
-});
+app.get('/styles.css', serveStatic({ path: './src/styles.css' }));
 
 /**
  * API: Get current configuration
