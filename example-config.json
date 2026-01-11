@@ -1,0 +1,163 @@
+{
+  "title": "Custom Design System",
+  "description": "A beautiful, accessible design system built with OKLCH",
+  "palettes": [
+    {
+      "name": "Brand Colors",
+      "colors": [
+        {
+          "name": "brand-light",
+          "oklch": {
+            "l": 0.85,
+            "c": 0.1,
+            "h": 260
+          },
+          "description": "Light brand accent",
+          "usage": "Backgrounds, subtle highlights"
+        },
+        {
+          "name": "brand-main",
+          "oklch": {
+            "l": 0.6,
+            "c": 0.22,
+            "h": 260
+          },
+          "description": "Primary brand color",
+          "usage": "Main buttons, primary actions, links"
+        },
+        {
+          "name": "brand-dark",
+          "oklch": {
+            "l": 0.35,
+            "c": 0.18,
+            "h": 260
+          },
+          "description": "Dark brand accent",
+          "usage": "Active states, emphasis"
+        }
+      ]
+    },
+    {
+      "name": "Neutrals",
+      "colors": [
+        {
+          "name": "white",
+          "oklch": {
+            "l": 1,
+            "c": 0,
+            "h": 0
+          },
+          "usage": "Page backgrounds, cards"
+        },
+        {
+          "name": "gray-100",
+          "oklch": {
+            "l": 0.95,
+            "c": 0.005,
+            "h": 260
+          },
+          "usage": "Subtle backgrounds"
+        },
+        {
+          "name": "gray-500",
+          "oklch": {
+            "l": 0.6,
+            "c": 0.01,
+            "h": 260
+          },
+          "usage": "Secondary text"
+        },
+        {
+          "name": "gray-900",
+          "oklch": {
+            "l": 0.2,
+            "c": 0.02,
+            "h": 260
+          },
+          "usage": "Primary text"
+        }
+      ]
+    },
+    {
+      "name": "Status Colors",
+      "colors": [
+        {
+          "name": "success",
+          "oklch": {
+            "l": 0.65,
+            "c": 0.18,
+            "h": 145
+          },
+          "description": "Success/positive feedback",
+          "usage": "Success messages, confirmations"
+        },
+        {
+          "name": "warning",
+          "oklch": {
+            "l": 0.75,
+            "c": 0.15,
+            "h": 85
+          },
+          "description": "Warning/caution",
+          "usage": "Warnings, important notices"
+        },
+        {
+          "name": "error",
+          "oklch": {
+            "l": 0.6,
+            "c": 0.22,
+            "h": 25
+          },
+          "description": "Error/danger",
+          "usage": "Error messages, destructive actions"
+        }
+      ]
+    }
+  ],
+  "typography": {
+    "fontFamily": {
+      "heading": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "body": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "mono": "'JetBrains Mono', 'SF Mono', Monaco, monospace"
+    },
+    "scale": {
+      "h1": "3.5rem",
+      "h2": "2.5rem",
+      "h3": "2rem",
+      "h4": "1.5rem",
+      "h5": "1.25rem",
+      "h6": "1.125rem",
+      "body": "1rem",
+      "small": "0.875rem"
+    },
+    "lineHeight": {
+      "tight": 1.2,
+      "normal": 1.5,
+      "relaxed": 1.8
+    },
+    "fontWeight": {
+      "light": 300,
+      "normal": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    }
+  },
+  "spacing": {
+    "xs": "0.25rem",
+    "sm": "0.5rem",
+    "md": "1rem",
+    "lg": "1.5rem",
+    "xl": "2rem",
+    "2xl": "3rem",
+    "3xl": "4rem",
+    "4xl": "6rem"
+  },
+  "accessibility": {
+    "minContrastNormal": 4.5,
+    "minContrastLarge": 3,
+    "minContrastAAA": 7,
+    "minFontSize": "16px",
+    "maxLineLength": 75
+  }
+}

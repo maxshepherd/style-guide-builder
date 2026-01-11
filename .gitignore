@@ -1,0 +1,14 @@
+# deps
+node_modules/
+
+# Reference documentation (third-party/copyright)
+HONO.md
+
+# Internal development files
+REFACTORING.md
+ARCHITECTURE.md
+FEATURES.md
+reference/
+
+# OS files
+.DS_Store
